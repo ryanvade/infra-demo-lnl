@@ -2175,6 +2175,7 @@ dependencies = [
  "actix-web",
  "bson",
  "chrono",
+ "futures",
  "mongodb",
  "serde",
  "serde_json",

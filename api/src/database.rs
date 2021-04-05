@@ -1,4 +1,4 @@
-use mongodb::{ Client, Database, options::ClientOptions, error::Result };
+use mongodb::{error::Result, options::ClientOptions, Client, Database};
 
 pub async fn init() -> Result<Database> {
     let client_options = ClientOptions::parse("mongodb://localhost:27017").await?;
@@ -12,7 +12,7 @@ pub async fn init() -> Result<Database> {
     return Ok(database);
 }
 
-async fn collection_exists(collection_name: &str, database: &Database) -> Result<bool>  {
+async fn collection_exists(collection_name: &str, database: &Database) -> Result<bool> {
     let collection_names = database.list_collection_names(None).await?;
     return Ok(collection_names.contains(&collection_name.to_string()));
 }
