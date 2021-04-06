@@ -1,3 +1,4 @@
+use crate::auth::claims::Claims;
 use actix_web::{web, HttpResponse, Responder};
 use bson::{doc, Bson};
 use chrono::prelude::*;
@@ -22,14 +23,20 @@ pub struct ToDoPaginationOptions {
 pub async fn create_todo(
     request: web::Json<CreateTodoRequest>,
     app_state: web::Data<crate::AppState>,
+    claims: Option<Claims>,
 ) -> impl Responder {
-    println!("Description: {}", request.descr);
     let todo_service = &app_state.todo_service;
+
+    if claims.is_none() {
+        return HttpResponse::Forbidden().finish();
+    }
+    let claims = claims.unwrap();
 
     let doc = doc! {
         "descr": request.descr.clone(),
         "created_at": Bson::DateTime(Utc::now()),
-        "completed": false
+        "completed": false,
+        "user_id": claims.sub
     };
     match todo_service.create(doc).await {
         Ok(result) => {
@@ -40,7 +47,6 @@ pub async fn create_todo(
             return HttpResponse::Created().json(json!({ "id": id.to_string() }));
         }
         Err(err) => {
-            println!("Failed: {}", err);
             return HttpResponse::InternalServerError().finish();
         }
     }
@@ -49,12 +55,17 @@ pub async fn create_todo(
 pub async fn get_todo(
     path: web::Path<(String,)>,
     app_state: web::Data<crate::AppState>,
+    claims: Option<Claims>,
 ) -> impl Responder {
     let id = path.into_inner().0;
-    println!("Id: {}", id);
     let todo_service = &app_state.todo_service;
 
-    match todo_service.get(&id).await {
+    if claims.is_none() {
+        return HttpResponse::Forbidden().finish();
+    }
+    let claims = claims.unwrap();
+
+    match todo_service.get(&id, &claims.sub).await {
         Ok(result) => {
             if result.is_none() {
                 return HttpResponse::NotFound().finish();
@@ -63,7 +74,6 @@ pub async fn get_todo(
             return HttpResponse::Ok().json(todo.to_json());
         }
         Err(err) => {
-            println!("Err: {:#?}", err);
             return HttpResponse::InternalServerError().finish();
         }
     }
@@ -72,11 +82,17 @@ pub async fn get_todo(
 pub async fn delete_todo(
     path: web::Path<(String,)>,
     app_state: web::Data<crate::AppState>,
+    claims: Option<Claims>,
 ) -> impl Responder {
     let id = path.into_inner().0;
     let todo_service = &app_state.todo_service;
 
-    match todo_service.delete(&id).await {
+    if claims.is_none() {
+        return HttpResponse::Forbidden().finish();
+    }
+    let claims = claims.unwrap();
+
+    match todo_service.delete(&id, &claims.sub).await {
         Ok(result) => {
             if result.is_none() {
                 return HttpResponse::NotFound().finish();
@@ -84,7 +100,6 @@ pub async fn delete_todo(
             return HttpResponse::NoContent().finish();
         }
         Err(err) => {
-            println!("Err: {:#?}", err);
             return HttpResponse::InternalServerError().finish();
         }
     }
@@ -93,6 +108,7 @@ pub async fn delete_todo(
 pub async fn list_todos(
     query: web::Query<ToDoPaginationOptions>,
     app_state: web::Data<crate::AppState>,
+    claims: Option<Claims>,
 ) -> impl Responder {
     let todo_service = &app_state.todo_service;
 
@@ -101,7 +117,12 @@ pub async fn list_todos(
         last_id = Some(query_last_id);
     }
 
-    match todo_service.list(last_id).await {
+    if claims.is_none() {
+        return HttpResponse::Forbidden().finish();
+    }
+    let claims = claims.unwrap();
+
+    match todo_service.list(last_id, &claims.sub).await {
         Ok(results) => {
             if results.is_none() {
                 return HttpResponse::BadRequest().finish();
@@ -112,7 +133,6 @@ pub async fn list_todos(
             return HttpResponse::Ok().json(json!({ "items": results }));
         }
         Err(err) => {
-            println!("Err: {:#?}", err);
             return HttpResponse::InternalServerError().finish();
         }
     }

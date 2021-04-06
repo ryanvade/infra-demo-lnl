@@ -12,12 +12,7 @@ pub struct ToDo {
     pub descr: String,
     pub created_at: DateTime,
     pub completed: bool,
-}
-
-impl std::convert::Into<String> for ToDo {
-    fn into(self) -> String {
-        return String::new();
-    }
+    pub user_id: String,
 }
 
 impl std::fmt::Display for ToDo {
@@ -33,7 +28,7 @@ impl std::fmt::Display for ToDo {
 
 impl std::convert::Into<actix_web::dev::Body> for ToDo {
     fn into(self) -> Body {
-        return Body::Bytes(web::Bytes::from(self.to_string()));
+        return Body::Bytes(web::Bytes::from(self.to_json().to_string()));
     }
 }
 

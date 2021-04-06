@@ -7,7 +7,7 @@ use std::str::FromStr;
 
 use super::todo::ToDo;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct ToDoService {
     collection: Collection,
 }
@@ -21,13 +21,16 @@ impl ToDoService {
         self.collection.insert_one(todo, None).await
     }
 
-    pub async fn get(&self, id: &String) -> Result<Option<ToDo>> {
+    pub async fn get(&self, id: &String, sub: &String) -> Result<Option<ToDo>> {
         let id = ObjectId::from_str(id);
         if id.is_err() {
             return Ok(None);
         }
         let filter = doc! {
-            "_id": id.unwrap()
+            "$and": [
+                {"_id": id.unwrap()},
+                {"user_id": sub}
+            ]
         };
         let result = self.collection.find_one(filter, None).await;
         if result.is_err() {
@@ -43,13 +46,16 @@ impl ToDoService {
         }
     }
 
-    pub async fn delete(&self, id: &String) -> Result<Option<i64>> {
+    pub async fn delete(&self, id: &String, sub: &String) -> Result<Option<i64>> {
         let id = ObjectId::from_str(id);
         if id.is_err() {
             return Ok(None);
         }
         let filter = doc! {
-            "_id": id.unwrap()
+            "$and": [
+                {"_id": id.unwrap()},
+                {"user_id": sub}
+            ]
         };
         let result = self.collection.delete_one(filter, None).await;
         match result {
@@ -65,8 +71,10 @@ impl ToDoService {
         }
     }
 
-    pub async fn list(&self, last_id: Option<&String>) -> Result<Option<Vec<ToDo>>> {
-        let mut filter = doc! {};
+    pub async fn list(&self, last_id: Option<&String>, sub: &String) -> Result<Option<Vec<ToDo>>> {
+        let mut filter = doc! {
+            "user_id": sub
+        };
         if let Some(last_id) = last_id {
             let last_id = ObjectId::from_str(last_id);
             if last_id.is_err() {
@@ -74,9 +82,14 @@ impl ToDoService {
             }
             let last_id = last_id.unwrap();
             filter = doc! {
-                "_id": {
-                    "$gt": last_id
-                }
+                "$and": [
+                    {
+                        "_id": {
+                            "$gt": last_id
+                        }
+                    },
+                    { "user_id": sub }
+                ]
             };
         }
         let options = FindOptions::builder().limit(1).build();
