@@ -17,8 +17,8 @@ pub struct Claims {
     pub aud: String,
     pub iat: i64,
     pub exp: i64,
-    pub azp: String,
-    pub gty: String,
+    pub azp: Option<String>,
+    pub gty: Option<String>,
 }
 
 impl FromRequest for Claims {

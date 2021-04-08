@@ -6,6 +6,7 @@ use actix_web::HttpMessage;
 use actix_web_httpauth::extractors::bearer::{BearerAuth, Config};
 use actix_web_httpauth::extractors::AuthenticationError;
 use jsonwebtoken::{decode, decode_header, Algorithm, DecodingKey, Validation};
+use actix_web::http::Method;
 
 pub mod claims;
 pub mod jwks;
@@ -14,6 +15,11 @@ pub async fn validator(
     req: ServiceRequest,
     credentials: BearerAuth,
 ) -> Result<ServiceRequest, Error> {
+    // Don't Require Auth for OPTIONS requests
+    if req.method() == Method::OPTIONS {
+        return Ok(req);
+    }
+
     let config = req
         .app_data::<Config>()
         .map(|data| data.clone())
