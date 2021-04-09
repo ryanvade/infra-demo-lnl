@@ -25,4 +25,14 @@ export default defineComponent({
 });
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+    $fa-font-path : "~@fortawesome/fontawesome-free-webfonts/webfonts";
+    @import "~@fortawesome/fontawesome-free-webfonts/scss/fontawesome.scss";
+    @import "~@fortawesome/fontawesome-free-webfonts/scss/fa-solid.scss";
+    @import "~@fortawesome/fontawesome-free-webfonts/scss/fa-regular.scss";
+    @import "~@fortawesome/fontawesome-free-webfonts/scss/fa-brands.scss";
+@import "~@fortawesome/fontawesome-free/scss/fontawesome";
+@import "~@fortawesome/fontawesome-free/scss/brands";
+@import "~@fortawesome/fontawesome-free/scss/regular";
+@import "~@fortawesome/fontawesome-free/scss/solid";
+</style>

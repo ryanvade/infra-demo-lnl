@@ -92,7 +92,7 @@ impl ToDoService {
                 ]
             };
         }
-        let options = FindOptions::builder().limit(1).build();
+        let options = FindOptions::builder().limit(10000).build();
         let result = self.collection.find(filter, options).await;
         match result {
             Ok(result) => {

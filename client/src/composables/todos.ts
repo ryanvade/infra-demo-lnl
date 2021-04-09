@@ -36,6 +36,22 @@ export function useTodos() {
     return response.data.items;
   }
 
+  async function createTodo(descr: string) {
+    state.loading = true;
+    const url = `${process.env.VUE_APP_API_URL}/api/todos`;
+    await instance.post(url, { descr });
+    const todos = getTodos();
+    return todos;
+  }
+
+  async function deleteToDo(id: string) {
+    state.loading = true;
+    const url = `${process.env.VUE_APP_API_URL}/api/todos/${id}`;
+    await instance.delete(url);
+    const todos = getTodos();
+    return todos;
+  }
+
   onMounted(async () => {
     if (authenticated.value) {
       await getTodos();
@@ -45,5 +61,7 @@ export function useTodos() {
   return {
     ...toRefs(state),
     getTodos,
+    createTodo,
+    deleteToDo,
   };
 }
