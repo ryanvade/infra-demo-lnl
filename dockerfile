@@ -16,7 +16,7 @@ COPY "./api" "./"
 RUN cargo build --release
 RUN cargo install --path .
 
-FROM rust:1.51
+FROM rust:1.51-slim
 WORKDIR /opt/todos-api
 COPY --from=RUST-BUILDER /usr/local/cargo/bin/todos-api .
 COPY --from=NODE-BUILDER /usr/src/todos/dist ./dist
