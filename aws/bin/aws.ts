@@ -11,5 +11,6 @@ const sharedStack = new AwsStack(app, 'AwsStack', {
 
 const appStack = new AppStack(app, "AppStack", {
   deploymentRole: sharedStack.githubDeploymentRole,
-  vpc: sharedStack.vpc
+  vpc: sharedStack.vpc,
+  repository: sharedStack.repository
 })

@@ -12,7 +12,9 @@ export class AwsStack extends cdk.Stack {
     super(scope, id, props);
 
     // Container Registry
-    this.repository = new Repository(this, "todos-repository");
+    this.repository = new Repository(this, "todos-repository", {
+      removalPolicy: cdk.RemovalPolicy.DESTROY
+    });
 
     // GitHub Deployment User
     const githubDeploymentUser = new User(this, "github-deployment-user");
@@ -26,6 +28,10 @@ export class AwsStack extends cdk.Stack {
     this.repository.grantPullPush(this.githubDeploymentRole);
 
     // Deployment VPC
-    this.vpc = new Vpc(this, "todos-vpc");
+    this.vpc = new Vpc(this, "todos-vpc", {
+      cidr: "10.0.0.0/16"
+    });
+
+    cdk.Tags.of(this.vpc).add("Name", "todos-vpc");
   }
 }
