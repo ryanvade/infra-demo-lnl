@@ -1,0 +1,11 @@
+api/.idea
+api/dist
+api/target
+api/.env
+api/watch.sh
+api/.gitignore
+
+client/dist
+client/node_modules
+client/.gitignore
+client/yarn-error*

@@ -1,7 +1,8 @@
 use mongodb::{error::Result, options::ClientOptions, Client, Database};
 
 pub async fn init() -> Result<Database> {
-    let client_options = ClientOptions::parse("mongodb://localhost:27017").await?;
+    let connection_string = std::env::var("DATABASE_CONNECTION_STRING").expect("DATABASE_CONNECTION_STRING missing");
+    let client_options = ClientOptions::parse(&connection_string).await?;
     let client = Client::with_options(client_options)?;
     let database = client.database("app");
 

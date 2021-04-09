@@ -7,6 +7,7 @@ mod api;
 mod auth;
 mod database;
 mod todos;
+mod app;
 
 use todos::todo_service::ToDoService;
 
@@ -30,11 +31,13 @@ async fn main() -> std::io::Result<()> {
     .await
     .unwrap_or(auth::jwks::JWKS { keys: vec![] });
 
+    println!("App Starting");
+
     HttpServer::new(move || {
         let todo_service = ToDoService::new(database.collection("todos"));
 
         // TODO: Make not permissive
-        let cors = Cors::permissive().allowed_origin("http://localhost:8081");
+        let cors = Cors::permissive().allow_any_origin();
 
         App::new()
             .wrap(cors)
@@ -44,8 +47,9 @@ async fn main() -> std::io::Result<()> {
                 jwks: jwks.clone(),
             })
             .service(web::scope("/api").wrap(HttpAuthentication::bearer(auth::validator)).configure(api::register))
+            .service(web::scope("").configure(app::register))
     })
-    .bind("127.0.0.1:8080")?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
 }
