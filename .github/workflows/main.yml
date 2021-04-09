@@ -33,7 +33,6 @@ jobs:
           context: .
           builder: ${{ steps.buildx.outputs.name }}
           file: dockerfile
-          target: deploy
           push: false
           tags: ghcr.io/ryanvade/todos:latest
           cache-from: type=local,src=/tmp/.buildx-cache
