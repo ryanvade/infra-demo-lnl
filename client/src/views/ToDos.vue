@@ -37,7 +37,6 @@ export default defineComponent({
     const showCreateModal = ref<boolean>(false);
 
     function fabClick() {
-      console.log("fabClick");
       showCreateModal.value = !showCreateModal.value;
     }
 
