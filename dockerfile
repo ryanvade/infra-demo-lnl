@@ -34,6 +34,4 @@ WORKDIR /opt/todos-api
 COPY --from=RUST-BUILDER /usr/local/cargo/bin/todos-api .
 COPY --from=NODE-BUILDER /usr/src/todos/dist ./dist
 
-RUN ls .
-
 CMD ["./todos-api"]

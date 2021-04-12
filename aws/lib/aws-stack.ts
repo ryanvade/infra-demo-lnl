@@ -24,6 +24,12 @@ export class AwsStack extends cdk.Stack {
       assumedBy: githubDeploymentUser
     });
 
+    this.githubDeploymentRole.assumeRolePolicy?.addStatements(new PolicyStatement({
+      principals: [ githubDeploymentUser ],
+      actions: ["sts:TagSession"],
+      effect: Effect.ALLOW
+    }));
+
     githubDeploymentUser.attachInlinePolicy(new Policy(this, 'github-deployment-user-assume-role-policy', {
       statements: [
         new PolicyStatement({
@@ -31,7 +37,7 @@ export class AwsStack extends cdk.Stack {
             "sts:AssumeRole",
             "sts:TagSession"
           ],
-          resources: [ this.githubDeploymentRole.roleArn],
+          resources: [ this.githubDeploymentRole.roleArn ],
           effect: Effect.ALLOW
         })
       ]
