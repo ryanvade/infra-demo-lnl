@@ -1,6 +1,6 @@
 import * as cdk from '@aws-cdk/core';
 import { Repository } from "@aws-cdk/aws-ecr";
-import { User, Role } from "@aws-cdk/aws-iam";
+import { User, Role, Policy, PolicyStatement, Effect } from "@aws-cdk/aws-iam";
 import { Vpc } from "@aws-cdk/aws-ec2";
 
 export class AwsStack extends cdk.Stack {
@@ -23,6 +23,19 @@ export class AwsStack extends cdk.Stack {
     this.githubDeploymentRole = new Role(this, "github-deployment-role", {
       assumedBy: githubDeploymentUser
     });
+
+    githubDeploymentUser.attachInlinePolicy(new Policy(this, 'github-deployment-user-assume-role-policy', {
+      statements: [
+        new PolicyStatement({
+          actions: [
+            "sts:AssumeRole",
+            "sts:TagSession"
+          ],
+          resources: [ this.githubDeploymentRole.roleArn],
+          effect: Effect.ALLOW
+        })
+      ]
+    }));
 
     // Grant permission to Push/Pull images from GitHub
     this.repository.grantPullPush(this.githubDeploymentRole);
