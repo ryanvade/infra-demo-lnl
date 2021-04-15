@@ -99,23 +99,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
       - name: Download task definition
-            run: |
-              aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > ./aws/task-definition.json
+        run: |
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > ./aws/task-definition.json
       - name: Fill in the new image ID in the Amazon ECS task definition
-            id: update-task-definition
-            uses: aws-actions/amazon-ecs-render-task-definition@v1
-            env:
-              ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-              ECR_REPOSITORY: awsstack-todosrepositoryde603543-loab1qk4ck2l
-              IMAGE_TAG: ${{ github.sha }}
-            with:
-              task-definition: ./aws/task-definition.json
-              container-name: task-definition-container
-              image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+        id: update-task-definition
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: awsstack-todosrepositoryde603543-loab1qk4ck2l
+          IMAGE_TAG: ${{ github.sha }}
+        with:
+          task-definition: ./aws/task-definition.json
+          container-name: task-definition-container
+          image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - name: Deploy Amazon ECS task definition
-            uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-            with:
-              task-definition: ${{ steps.task-def.outputs.task-definition }}
-              service: ${{ secrets.ECS_SERVICE_NAME }}
-              cluster: ${{ secrets.ECS_CLUSTER_NAME }}
-              wait-for-service-stability: false # Can take a LONG time
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE_NAME }}
+          cluster: ${{ secrets.ECS_CLUSTER_NAME }}
+          wait-for-service-stability: false # Can take a LONG time
