@@ -46,7 +46,7 @@ jobs:
           # More: https://github.com/moby/buildkit#--export-cache-options
           # And: https://github.com/docker/buildx#--cache-tonametypetypekeyvalue
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
-  deploy_to_aws:
+  push_image_to_ecr:
     needs: build
     environment: Production
     runs-on: ubuntu-latest
@@ -82,3 +82,40 @@ jobs:
         run: |
           docker tag ghcr.io/ryanvade/todos:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+  deploy_to_ecs:
+    needs: push_image_to_ecr
+    environment: Production
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1200
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - name: Download task definition
+            run: |
+              aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > ./aws/task-definition.json
+      - name: Fill in the new image ID in the Amazon ECS task definition
+            id: update-task-definition
+            uses: aws-actions/amazon-ecs-render-task-definition@v1
+            env:
+              ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+              ECR_REPOSITORY: awsstack-todosrepositoryde603543-loab1qk4ck2l
+              IMAGE_TAG: ${{ github.sha }}
+            with:
+              task-definition: ./aws/task-definition.json
+              container-name: task-definition-container
+              image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+      - name: Deploy Amazon ECS task definition
+            uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+            with:
+              task-definition: ${{ steps.task-def.outputs.task-definition }}
+              service: ${{ secrets.ECS_SERVICE_NAME }}
+              cluster: ${{ secrets.ECS_CLUSTER_NAME }}
+              wait-for-service-stability: false # Can take a LONG time
