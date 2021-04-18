@@ -102,8 +102,8 @@ export class AppStack extends cdk.Stack {
 
     // Task Definition
     this.taskDefinition = new FargateTaskDefinition(this, 'todos-task-definition', {
-      cpu: 512,
-      memoryLimitMiB: 2048
+      cpu: 256,
+      memoryLimitMiB: 512
     });
     
     const connectionString = `mongodb://${this.databaseSecret.secretValueFromJson("username")}:${this.databaseSecret.secretValueFromJson("password")}@${this.databaseCluster.clusterEndpoint.hostname}:27017/?ssl=false&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;

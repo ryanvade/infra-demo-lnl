@@ -48,7 +48,7 @@ jobs:
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
   push_image_to_ecr:
     needs: build
-    environment: Production
+    environment: AWS ECS Production
     runs-on: ubuntu-latest
     steps:
       - name: Login to GitHub Container Registry
@@ -84,7 +84,7 @@ jobs:
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
   deploy_to_ecs:
     needs: push_image_to_ecr
-    environment: Production
+    environment: AWS ECS Production
     runs-on: ubuntu-latest
     steps:
       - name: Configure AWS credentials
@@ -100,7 +100,7 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
       - name: Download task definition
         run: |
-          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > ./aws/task-definition.json
+          aws ecs describe-task-definition --task-definition ${{ secrets.ECS_TASK_DEFINITION_NAME }} --query taskDefinition > task-definition.json
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: update-task-definition
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -109,7 +109,7 @@ jobs:
           ECR_REPOSITORY: awsstack-todosrepositoryde603543-loab1qk4ck2l
           IMAGE_TAG: ${{ github.sha }}
         with:
-          task-definition: ./aws/task-definition.json
+          task-definition: task-definition.json
           container-name: task-definition-container
           image: $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
       - name: Deploy Amazon ECS task definition

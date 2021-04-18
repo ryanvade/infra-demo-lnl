@@ -1,0 +1,67 @@
+name: AWS
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "aws/**"
+
+jobs:
+  get_diff:
+    environment: AWS Read Only Production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+      - uses: actions/setup-node@v2
+        name: Setup Node [14]
+        with:
+          node-version: '14'
+      - name: Install AWS CDK
+        run: |
+          npm i -g aws-cdk@1.97.0
+      - name: Install dependencies
+        run: |
+          cd aws
+          npm ci
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1200
+      - name: Get stack diff
+        run: |
+          cd aws
+          cdk diff
+  deploy_changes:
+    environment: AWS Production
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout
+      - uses: actions/setup-node@v2
+        name: Setup Node [14]
+        with:
+          node-version: '14'
+      - name: Install AWS CDK
+        run: |
+          npm i -g aws-cdk@1.97.0
+      - name: Install dependencies
+        run: |
+          cd aws
+          npm ci
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+          role-duration-seconds: 1200
+      - name: Deploy Changes
+        run: |
+          cd aws
+          cdk deploy AppStack --require-approval never
