@@ -20,13 +20,6 @@ jobs:
         uses: docker/setup-buildx-action@master
         with:
           install: true
-      - name: Cache Docker layers
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.repository }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1
         with:
@@ -41,11 +34,10 @@ jobs:
           file: dockerfile
           push: true
           tags: ghcr.io/ryanvade/todos:latest
-          cache-from: type=local,src=/tmp/.buildx-cache
-          # Note the mode=max here
+          cache-from: type=registry,ref=ghcr.io/ryanvade/todos:buildcache
           # More: https://github.com/moby/buildkit#--export-cache-options
           # And: https://github.com/docker/buildx#--cache-tonametypetypekeyvalue
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+          cache-to: type=registry,ref=ghcr.io/ryanvade/todos:buildcache
   push_image_to_ecr:
     needs: build
     environment: AWS ECS Production
