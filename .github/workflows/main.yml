@@ -77,7 +77,7 @@ jobs:
       - name: Push Docker Image to ECR
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: awsstack-todosrepositoryde603543-loab1qk4ck2l
+          ECR_REPOSITORY: todos-repository
           IMAGE_TAG: ${{ github.sha }}
         run: |
           docker tag ghcr.io/ryanvade/todos:latest $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG

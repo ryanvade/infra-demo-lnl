@@ -37,6 +37,7 @@ jobs:
           cd aws
           cdk diff
   deploy_changes:
+    needs: get_diff
     environment: AWS Production
     runs-on: ubuntu-latest
     steps:

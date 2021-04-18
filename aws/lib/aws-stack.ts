@@ -32,6 +32,8 @@ export class AwsStack extends cdk.Stack {
       effect: Effect.ALLOW
     }));
 
+    this.addReadOnlyPermissionsToRole(this.githubDeploymentRole);
+
     githubDeploymentUser.attachInlinePolicy(new Policy(this, 'github-deployment-user-assume-role-policy', {
       statements: [
         new PolicyStatement({
@@ -59,8 +61,19 @@ export class AwsStack extends cdk.Stack {
       effect: Effect.ALLOW
     }));
 
-    // ECR Read Only
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    this.addReadOnlyPermissionsToRole(this.githubReadOnlyrole);
+
+    // Deployment VPC
+    this.vpc = new Vpc(this, "todos-vpc", {
+      cidr: "10.0.0.0/16",
+      natGateways: 0,
+    });
+
+    cdk.Tags.of(this.vpc).add("Name", "todos-vpc");
+  }
+
+  private addReadOnlyPermissionsToRole(role: Role) {
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "ecr:DescribeImages",
         "ecr:DescribeRepositories",
@@ -74,7 +87,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "ecs:DescribeCapacityProviders",
         "ecs:ListTagsForResource",
@@ -98,7 +111,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "ecs:ListServices",
         "ecs:ListAccountSettings",
@@ -112,7 +125,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "cloudformation:DescribeStackEvents",
         "cloudformation:DescribeStackSet",
@@ -130,7 +143,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "cloudformation:ListStacks",
         "cloudformation:DescribeType",
@@ -141,7 +154,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "ec2:DescribeAvailabilityZones",
         "ec2:DescribeSecurityGroupReferences",
@@ -160,7 +173,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "secretsmanager:DescribeSecret"
       ],
@@ -169,7 +182,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "secretsmanager:ListSecrets"
       ],
@@ -178,7 +191,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "acm:DescribeCertificate",
         "acm:GetCertificate"
@@ -188,7 +201,7 @@ export class AwsStack extends cdk.Stack {
       ]
     }));
 
-    this.githubReadOnlyrole.addToPolicy(new PolicyStatement({
+    role.addToPolicy(new PolicyStatement({
       actions: [
         "acm:ListCertificates"
       ],
@@ -196,13 +209,5 @@ export class AwsStack extends cdk.Stack {
         "*"
       ]
     }));
-
-    // Deployment VPC
-    this.vpc = new Vpc(this, "todos-vpc", {
-      cidr: "10.0.0.0/16",
-      natGateways: 0,
-    });
-
-    cdk.Tags.of(this.vpc).add("Name", "todos-vpc");
   }
 }
