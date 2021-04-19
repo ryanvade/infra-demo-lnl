@@ -33,6 +33,7 @@ export class AwsStack extends cdk.Stack {
     }));
 
     this.addReadOnlyPermissionsToRole(this.githubDeploymentRole);
+    this.addSharedWritePermissionsToRole(this.githubDeploymentRole);
 
     githubDeploymentUser.attachInlinePolicy(new Policy(this, 'github-deployment-user-assume-role-policy', {
       statements: [
@@ -70,6 +71,20 @@ export class AwsStack extends cdk.Stack {
     });
 
     cdk.Tags.of(this.vpc).add("Name", "todos-vpc");
+  }
+
+  private addSharedWritePermissionsToRole(role: Role) {
+    role.addToPolicy(new PolicyStatement({
+      actions: [
+        "cloudformation:DeleteChangeSet",
+        "cloudformation:CreateChangeSet",
+        "cloudformation:ExecuteChangeSet"
+      ],
+      resources: [
+        `arn:aws:cloudformation:${this.region}:${this.account}:stack/AppStack/*`,
+        `arn:aws:cloudformation:${this.region}:${this.account}:stack/AwsStack/*`
+      ]
+    }))
   }
 
   private addReadOnlyPermissionsToRole(role: Role) {

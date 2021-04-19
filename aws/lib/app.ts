@@ -160,7 +160,8 @@ export class AppStack extends cdk.Stack {
     }
     statements.push(new PolicyStatement({
       actions: [
-        "iam:PassRole"
+        "iam:PassRole",
+        "iam:GetRole"
       ],
       resources: [
         ...taskDefinitionRoles
