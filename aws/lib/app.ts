@@ -1,7 +1,7 @@
 import * as cdk from '@aws-cdk/core';
 import { DatabaseCluster, ClusterParameterGroup } from "@aws-cdk/aws-docdb";
 import { InstanceType, InstanceClass, InstanceSize, SubnetType, Port } from "@aws-cdk/aws-ec2";
-import { Role } from "@aws-cdk/aws-iam";
+import { Role, Policy, PolicyStatement } from "@aws-cdk/aws-iam";
 import { Vpc } from "@aws-cdk/aws-ec2";
 import { ContainerImage, Cluster, FargateService, FargateTaskDefinition, Protocol } from "@aws-cdk/aws-ecs";
 import { Repository } from "@aws-cdk/aws-ecr";
@@ -105,7 +105,7 @@ export class AppStack extends cdk.Stack {
       cpu: 256,
       memoryLimitMiB: 512
     });
-    
+
     const connectionString = `mongodb://${this.databaseSecret.secretValueFromJson("username")}:${this.databaseSecret.secretValueFromJson("password")}@${this.databaseCluster.clusterEndpoint.hostname}:27017/?ssl=false&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false`;
     this.taskDefinition.addContainer("task-definition-container", {
       image: ContainerImage.fromEcrRepository(props.repository),
@@ -136,6 +136,49 @@ export class AppStack extends cdk.Stack {
 
     httpsListener.addTargetGroups('https-target-groups', {
       targetGroups: [this.targetGroup]
+    });
+
+    this.addECSWritePermissions(props.deploymentRole);
+  }
+
+  private addECSWritePermissions(role: Role) {
+    const statements: PolicyStatement[] = [];
+
+    statements.push(new PolicyStatement({
+      actions: [
+        "ecs:RegisterTaskDefinition"
+      ],
+      resources: [
+        "*"
+      ]
+    }));
+    let taskDefinitionRoles = [
+      this.service.taskDefinition.taskRole.roleArn
+    ];
+    if (this.service.taskDefinition.executionRole) {
+      taskDefinitionRoles.push(this.service.taskDefinition.executionRole.roleArn);
+    }
+    statements.push(new PolicyStatement({
+      actions: [
+        "iam:PassRole"
+      ],
+      resources: [
+        ...taskDefinitionRoles
+      ]
+    }));
+    statements.push(new PolicyStatement({
+      actions: [
+        "ecs:UpdateService",
+        "ecs:DescribeServices"
+      ],
+      resources: [
+        this.service.serviceArn
+      ]
+    }));
+
+    const ecsPolicy = new Policy(this, 'ecs-policy', {
+      statements: statements,
+      roles: [role]
     });
   }
 }
