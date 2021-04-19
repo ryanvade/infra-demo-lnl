@@ -41,7 +41,7 @@ jobs:
         run: |
           jq -n --arg awsstack "$(cat /tmp/awsstack.out)" --arg appstack "$(cat /tmp/appstack.out)" '[{"path": "aws/lib/aws-stack.ts", "start_line":0, "end_line": 0, "annotation_level": "notice", "message": $awsstack},{"path": "aws/lib/app.ts", "start_line":0, "end_line": 0, "annotation_level": "notice", "message": $appstack}]' >> /tmp/annotation.json
       - name: Send annotation json to GitHub
-        uses: yuzutech/annotations-action@v0.1.0
+        uses: yuzutech/annotations-action@v0.3.0
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           title: 'Diff'
