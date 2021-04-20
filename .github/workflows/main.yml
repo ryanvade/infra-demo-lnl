@@ -3,6 +3,8 @@ name: Main
 on:
   workflow_dispatch:
   push:
+    branches-ignore:
+      - "dependabot/**"
     paths:
       - "api/**"
       - "client/**"
